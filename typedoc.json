@@ -1,0 +1,14 @@
+{
+  "entryPoints": [
+    "./src/index.ts"
+  ],
+  "readme": "none",
+  "out": "./public",
+  "includeVersion": true,
+  "disableSources": true,
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "intentionallyNotExported": [
+  ]
+}

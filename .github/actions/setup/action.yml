@@ -1,0 +1,11 @@
+name: setup
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - run: corepack enable yarn
+      shell: bash
+    - run: yarn
+      shell: bash
