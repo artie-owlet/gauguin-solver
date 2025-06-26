@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@artie-owlet/node-app-template@workspace:.":
+"@artie-owlet/gauguin-solver@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@artie-owlet/node-app-template@workspace:."
+  resolution: "@artie-owlet/gauguin-solver@workspace:."
   dependencies:
     "@artie-owlet/chifir": "npm:^2.0.0"
     "@commitlint/cli": "npm:^19.8.0"
