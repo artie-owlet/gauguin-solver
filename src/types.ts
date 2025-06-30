@@ -8,6 +8,8 @@ export interface NumBlockRule {
 
 export interface NumBlock extends NumBlockRule {
     combs: number[][];
+    horzCellIdsIndices: number[][];
+    vertCellIdsIndices: number[][];
 }
 
 export interface Game {
