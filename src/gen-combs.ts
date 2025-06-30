@@ -1,49 +1,65 @@
-import type { NumBox } from './types';
+import type { NumBlockRule } from './types';
 
-const GAME_SIZE = 6;
+class RuleError extends Error {
+    public constructor(rule: NumBlockRule) {
+        super(`Invalid rule ${JSON.stringify(rule)}`);
+    }
+}
 
-export function genCombs({ cellIds, op, result}: Omit<NumBox, 'combs'>): number[][] {
+export function genCombs(gameSize: number, rule: NumBlockRule): number[][] {
+    const { cellIds, op, result } = rule;
     switch (op) {
         case '+':
-            return genAddCombsNonUnique(cellIds.length, result).filter((comb) => isUnique(cellIds, comb));
+            return genAddCombsNonUnique(gameSize, cellIds.length, result).
+                filter((comb) => isUnique(gameSize, cellIds, comb));
         case '-':
-            return genSubCombs(result);
+            if (cellIds.length !== 2) {
+                throw new RuleError(rule);
+            }
+            return genSubCombs(gameSize, result);
         case '*':
-            return genMultCombsNonUnique(cellIds.length, result).filter((comb) => isUnique(cellIds, comb));
+            return genMultCombsNonUnique(gameSize, cellIds.length, result).
+                filter((comb) => isUnique(gameSize, cellIds, comb));
         case '/':
-            return genDivCombs(result);
+            if (cellIds.length !== 2) {
+                throw new RuleError(rule);
+            }
+            return genDivCombs(gameSize, result);
+    }
+    if (cellIds.length !== 1) {
+        throw new RuleError(rule);
     }
     return [[result]];
 }
 
-function genAddCombsNonUnique(size: number, result: number): number[][] {
+function genAddCombsNonUnique(gameSize: number, size: number, result: number): number[][] {
     if (size === 1) {
         return [[result]];
     }
     const combs: number[][] = [];
-    for (let i = 1; i <= GAME_SIZE; ++i) {
+    for (let i = 1; i <= gameSize; ++i) {
         if (i < result) {
-            combs.push(...genAddCombsNonUnique(size - 1, result - i).map((comb) => [i, ...comb]));
+            combs.push(...genAddCombsNonUnique(gameSize, size - 1, result - i).map((comb) => [i, ...comb]));
         }
     }
     return combs;
 }
 
-function genMultCombsNonUnique(size: number, result: number): number[][] {
+function genMultCombsNonUnique(gameSize: number, size: number, result: number): number[][] {
     if (size === 1) {
         return [[result]];
     }
     const combs: number[][] = [];
-    for (let i = 1; i <= GAME_SIZE; ++i) {
+    for (let i = 1; i <= gameSize; ++i) {
         if (result % i === 0) {
-            combs.push(...genMultCombsNonUnique(size - 1, result / i).map((comb) => [i, ...comb]));
+            combs.push(...genMultCombsNonUnique(gameSize, size - 1, result / i).map((comb) => [i, ...comb]));
         }
     }
     return combs;
 }
 
-function isUnique(cellIds: number[], comb: number[]): boolean {
-    const coors = cellIds.map((id) => [Math.floor(id / GAME_SIZE), id % GAME_SIZE]);
+function isUnique(gameSize: number, cellIds: number[], comb: number[]): boolean {
+    const coors = cellIds.map((id) => [Math.floor(id / gameSize), id % gameSize]);
     for (let i = 0; i < coors.length - 1; ++i) {
         for (let j = i + 1; j < coors.length; ++j) {
             if ((coors[i][0] === coors[j][0] || coors[i][1] === coors[j][1]) && comb[i] === comb[j]) {
@@ -54,10 +70,10 @@ function isUnique(cellIds: number[], comb: number[]): boolean {
     return true;
 }
 
-function genSubCombs(result: number): number[][] {
+function genSubCombs(gameSize: number, result: number): number[][] {
     const combs: number[][] = [];
-    for (let a = 1; a < GAME_SIZE; ++a) {
-        for (let b = a + 1; b <= GAME_SIZE; ++b) {
+    for (let a = 1; a < gameSize; ++a) {
+        for (let b = a + 1; b <= gameSize; ++b) {
             if (b - a === result) {
                 combs.push([a, b]);
                 combs.push([b, a]);
@@ -67,10 +83,10 @@ function genSubCombs(result: number): number[][] {
     return combs;
 }
 
-function genDivCombs(result: number): number[][] {
+function genDivCombs(gameSize: number, result: number): number[][] {
     const combs: number[][] = [];
-    for (let a = 1; a < GAME_SIZE; ++a) {
-        for (let b = a + 1; b <= GAME_SIZE; ++b) {
+    for (let a = 1; a < gameSize; ++a) {
+        for (let b = a + 1; b <= gameSize; ++b) {
             if (b / a === result) {
                 combs.push([a, b]);
                 combs.push([b, a]);
