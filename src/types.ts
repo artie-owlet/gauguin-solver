@@ -6,13 +6,9 @@ export interface NumBlockRule {
     result: number;
 }
 
-export interface NumBlock extends NumBlockRule {
+export interface NumBlock {
+    cellIds: number[];
     combs: number[][];
     horzCellIdsIndices: number[][];
     vertCellIdsIndices: number[][];
-}
-
-export interface Game {
-    cells: number[];
-    numBoxes: NumBlockRule[];
 }
