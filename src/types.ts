@@ -5,10 +5,3 @@ export interface NumBlockRule {
     op: Operator;
     result: number;
 }
-
-export interface NumBlock {
-    cellIds: number[];
-    combs: number[][];
-    horzCellIdsIndices: number[][];
-    vertCellIdsIndices: number[][];
-}
