@@ -6,43 +6,66 @@ interface NumBlock {
     combs: number[][];
 }
 
-interface CellBlockItem {
+interface CellInBlock {
     block: NumBlock;
     index: number;
 }
 
 interface Game {
-    gameSize: number;
+    width: number;
+    height: number;
     solution: number[];
     blocks: NumBlock[];
-    cellBlocks: Map<number, CellBlockItem>;
+    cellIdToBlockMap: Map<number, CellInBlock>;
+    horzIndicesCombs: Map<number, number[][]>; // size -> combs
+    vertIndicesCombs: Map<number, number[][]>; // size -> combs
 }
 
-export function solve(gameSize: number, rules: NumBlockRule[]): number[] | null {
+export function solve(width: number, height: number, rules: NumBlockRule[]): number[] | null {
     const game: Game = {
-        gameSize,
-        solution: new Array<number>(gameSize * gameSize).fill(0);
+        width,
+        height,
+        solution: new Array<number>(width * height).fill(0),
         blocks: rules.map((rule) => ({
             cellIds: rule.cellIds,
-            combs: genCombs(gameSize, rule),
+            combs: genCombs(Math.max(width, height), rule),
         })),
-        cellBlocks: new Map<number, CellBlockItem>(),
+        cellIdToBlockMap: new Map<number, CellInBlock>(),
+        horzIndicesCombs: new Map<number, number[][]>(),
+        vertIndicesCombs: new Map<number, number[][]>(),
     }
     game.solution.forEach((_, id) => {
         const block = game.blocks.find((b) => b.cellIds.includes(id));
         if (block) {
-            game.cellBlocks.set(id, {
+            game.cellIdToBlockMap.set(id, {
                 block,
                 index: block.cellIds.indexOf(id),
             });
         }
     });
+    for (let i = 1; i < width; ++i) {
+        game.horzIndicesCombs.set(i, getInidicesCombs(i, width));
+    }
+    for (let i = 1; i < height; ++i) {
+        game.vertIndicesCombs.set(i, getInidicesCombs(i, height));
+    }
 
     setLastLeftNum(game); // set numbers from "=" blocks
     return solveGame({
         ...game,
         blocks: game.blocks.filter((block) => block.combs.length > 1)
     });
+}
+
+function getInidicesCombs(size: number, max: number, from = 0): number[][] {
+    if (size === 1) {
+        return new Array(max - from).fill(0).map((_, i) => [i + from]);
+    }
+    const combs: number[][] = [];
+    for (let i = from; i < max - size; ++i) {
+        combs.push(...getInidicesCombs(size - 1, max, i + 1).map((comb) => [i, ...comb]));
+    }
+    return combs;
 }
 
 function solveGame(game: Game): number[] | null {
@@ -81,37 +104,38 @@ function setLastLeftNum({ solution, blocks }: Game): boolean {
     return changed;
 }
 
-// function removeByDefinedSet(gameSize: number, blocks: NumBlock[]): boolean {
-//     let changed = false;
-//     blocks.forEach((block) => {
-//         [block.horzCellIdsIndices, block.vertCellIdsIndices].forEach((indicesList, isVert) => {
-//             indicesList.forEach((indices, rowcol) => {
-//                 if (indices.length === 0) {
-//                     return;
-//                 }
+function removeByDefinedSet(game: Game): boolean {
+    const possibleNums = game.solution.map((value, id) => {
+        const nums = new Set<number>();
+        const cellBlock = game.cellIdToBlockMap.get(id);
+        if (cellBlock) {
+            cellBlock.block.combs.forEach((comb) => nums.add(comb[cellBlock.index]));
+        } else {
+            nums.add(value);
+        }
+        return nums;
+    });
 
-//                 const nums = new Set<number>();
-//                 block.combs.forEach((comb) => {
-//                     indices.forEach((index) => nums.add(comb[index]));
-//                 });
-//                 if (nums.size !== indices.length) {
-//                     return;
-//                 }
+    let changed = false;
+    for (let setSize = 1; setSize < Math.max(game.width, game.height); ++setSize) {
+        [false, true].forEach((isVert) => {
+            const indicesCombs = (isVert ? game.vertIndicesCombs : game.horzIndicesCombs).get(setSize);
+            if (!indicesCombs) {
+                return;
+            }
 
-//                 for (let i = 0; i < gameSize; ++i) {
-//                     const cellId = isVert ? i * gameSize + rowcol : rowcol * gameSize + i;
-//                     if (block.cellIds.includes(cellId)) {
-//                         continue;
-//                     }
-//                     changed = removeCombs(cellId, Array.from(nums), blocks) || changed;
-//                 }
-//             });
-//         });
-//     });
-//     return changed;
-// }
-
-function removeByDefinedSet({ gameSize, blocks }: Game): boolean {
-    for (let setSize = 1; setSize < gameSize - 1; ++setSize) {
+            // NOTE: isVert=true - combinations in columns, iterate from 1 to width
+            for (let rowcol = 0; rowcol < (isVert ? game.width : game.height); ++rowcol) {
+                indicesCombs.forEach((indices) => {
+                    const nums = indices.reduce((acc, index) => {
+                        const cellId = isVert ? index * game.width + rowcol : rowcol * game.width + index;
+                        return acc.union(possibleNums[cellId]);
+                    }, new Set<number>());
+                    if (nums.size === setSize) {
+                    }
+                });
+            }
+        });
     }
+    return changed;
 }
