@@ -1,5 +1,6 @@
 import { genCombs } from './gen-combs';
 import type { NumBlockRule } from './types';
+import { printSolution } from './util';
 
 interface NumBlock {
     cellIds: number[];
@@ -33,7 +34,7 @@ export function solve(width: number, height: number, rules: NumBlockRule[]): num
         cellIdToBlockMap: new Map<number, CellInBlock>(),
         horzIndicesCombs: new Map<number, number[][]>(),
         vertIndicesCombs: new Map<number, number[][]>(),
-    }
+    };
     game.solution.forEach((_, id) => {
         const block = game.blocks.find((b) => b.cellIds.includes(id));
         if (block) {
@@ -51,10 +52,7 @@ export function solve(width: number, height: number, rules: NumBlockRule[]): num
     }
 
     setLastLeftNum(game); // set numbers from "=" blocks
-    return solveGame({
-        ...game,
-        blocks: game.blocks.filter((block) => block.combs.length > 1)
-    });
+    return solveGame(game);
 }
 
 function getInidicesCombs(size: number, max: number, from = 0): number[][] {
@@ -74,17 +72,66 @@ function solveGame(game: Game): number[] | null {
         changed = removeByDefinedSet(game) || changed;
 
         if (game.blocks.some((block) => block.combs.length === 0)) {
+            // eslint-disable-next-line no-console
+            console.log('BLOCKS ARE EMPTY', game.blocks.findIndex((block) => block.combs.length === 0));
             return null;
         }
 
         changed = setLastLeftNum(game) || changed;
-
-        game.blocks = game.blocks.filter((block) => block.combs.length > 1);
+        printSolution(game.solution, game.width, game.height);
 
         if (!changed) {
+            const blockIndex = game.blocks.findIndex((b) => b.combs.length > 1);
+            if (blockIndex < 0) {
+                throw new Error('BUG #1');
+            }
+            const block = game.blocks[blockIndex];
+            const index = block.cellIds.findIndex((id) => game.solution[id] === 0);
+            if (index < 0) {
+                throw new Error('BUG #2');
+            }
+            const nums = Array.from(block.combs.reduce((acc, comb) => acc.add(comb[index]), new Set<number>()));
+            if (nums.length === 1) {
+                throw new Error('BUG #3');
+            }
+            for (const num of nums) {
+                const copy = copyGame(game);
+                copy.solution[block.cellIds[index]] = num;
+                copy.blocks[blockIndex].combs = copy.blocks[blockIndex].combs.filter((comb) => comb[index] === num);
+                const result = solveGame(copy);
+                if (result) {
+                    return result;
+                }
+            }
         }
     }
     return game.solution;
+}
+
+function copyGame(source: Game): Game {
+    const copy: Game = {
+        ...source,
+        solution: [...source.solution],
+        blocks: source.blocks.map((block) => copyNumBlock(block)),
+        cellIdToBlockMap: new Map<number, CellInBlock>(),
+    };
+    copy.solution.forEach((_, id) => {
+        const block = copy.blocks.find((b) => b.cellIds.includes(id));
+        if (block) {
+            copy.cellIdToBlockMap.set(id, {
+                block,
+                index: block.cellIds.indexOf(id),
+            });
+        }
+    });
+    return copy;
+}
+
+function copyNumBlock(source: NumBlock): NumBlock {
+    return {
+        ...source,
+        combs: source.combs.map((comb) => [...comb]),
+    };
 }
 
 function setLastLeftNum({ solution, blocks }: Game): boolean {
@@ -132,6 +179,18 @@ function removeByDefinedSet(game: Game): boolean {
                         return acc.union(possibleNums[cellId]);
                     }, new Set<number>());
                     if (nums.size === setSize) {
+                        for (let colrow = 0; colrow < (isVert ? game.height : game.width); ++colrow) {
+                            const cellId = isVert ? rowcol * game.width + colrow : colrow * game.width + rowcol;
+                            const cellBlock = game.cellIdToBlockMap.get(cellId);
+                            if (cellBlock) {
+                                const len = cellBlock.block.cellIds.length;
+                                cellBlock.block.combs = cellBlock.block.combs.filter((comb) => {
+                                    const num = comb[cellBlock.index];
+                                    return !nums.has(num);
+                                });
+                                changed = changed || cellBlock.block.combs.length < len;
+                            }
+                        }
                     }
                 });
             }
