@@ -34,12 +34,17 @@ export function genCombs(gameSize: number, rule: NumBlockRule): number[][] {
 
 function genAddCombsNonUnique(gameSize: number, size: number, result: number): number[][] {
     if (size === 1) {
+        if (result > gameSize) {
+            return [];
+        }
         return [[result]];
     }
     const combs: number[][] = [];
     for (let i = 1; i <= gameSize; ++i) {
         if (i < result) {
-            combs.push(...genAddCombsNonUnique(gameSize, size - 1, result - i).map((comb) => [i, ...comb]));
+            combs.push(...genAddCombsNonUnique(gameSize, size - 1, result - i).
+                filter((comb) => comb.length === size - 1).
+                map((comb) => [i, ...comb]));
         }
     }
     return combs;
@@ -47,12 +52,17 @@ function genAddCombsNonUnique(gameSize: number, size: number, result: number): n
 
 function genMultCombsNonUnique(gameSize: number, size: number, result: number): number[][] {
     if (size === 1) {
+        if (result > gameSize) {
+            return [];
+        }
         return [[result]];
     }
     const combs: number[][] = [];
     for (let i = 1; i <= gameSize; ++i) {
         if (result % i === 0) {
-            combs.push(...genMultCombsNonUnique(gameSize, size - 1, result / i).map((comb) => [i, ...comb]));
+            combs.push(...genMultCombsNonUnique(gameSize, size - 1, result / i).
+                filter((comb) => comb.length === size - 1).
+                map((comb) => [i, ...comb]));
         }
     }
     return combs;
