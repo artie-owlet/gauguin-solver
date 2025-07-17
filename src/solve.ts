@@ -99,6 +99,7 @@ function solveGame(game: Game): number[] | null {
                     return result;
                 }
             }
+            return null;
         }
         changed = false;
     }

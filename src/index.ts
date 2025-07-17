@@ -5,7 +5,7 @@ import { solve } from './solve';
 import type { NumBlockRule, Operator } from './types';
 import { printSolution } from './util';
 
-const input = readFileSync('./input.txt');
+const input = readFileSync('./input9.txt');
 const rules = input.toString().split('\n').
     map((line) => line.trim()).
     filter((line) => line.length > 0).
@@ -21,9 +21,9 @@ const rules = input.toString().split('\n').
         } satisfies NumBlockRule;
     });
 
-const result = solve(6, 6, rules);
+const result = solve(9, 9, rules);
 if (!result) {
     console.error('No solution');
 } else {
-    printSolution(result, 6, 6);
+    printSolution(result, 9, 9);
 }
