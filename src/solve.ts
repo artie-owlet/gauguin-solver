@@ -21,7 +21,17 @@ interface Game {
     vertIndicesCombs: Map<number, number[][]>; // size -> combs
 }
 
-export function solve(width: number, height: number, rules: NumBlockRule[]): number[] | null {
+export function solve(width: number, height: number, rules: NumBlockRule[]): number[][] {
+    const allCellIds = rules.flatMap((rule) => rule.cellIds);
+    allCellIds.forEach((cellId, index) => {
+        if (allCellIds.indexOf(cellId) !== index) {
+            throw new Error(`Duplicate cellId ${cellId}`);
+        }
+        if (cellId < 0 || cellId >= width * height) {
+            throw new Error(`Invalid cellId ${cellId}`);
+        }
+    });
+
     const game: Game = {
         width,
         height,
@@ -65,13 +75,15 @@ function getInidicesCombs(size: number, max: number, from = 0): number[][] {
     return combs;
 }
 
-function solveGame(game: Game): number[] | null {
+function solveGame(game: Game): number[][] {
+    const solutions: number[][] = [];
+
     let changed = false;
     while (game.solution.some((v) => v === 0)) {
         changed = removeByDefinedSet(game) || changed;
 
         if (game.blocks.some((block) => block.combs.length === 0)) {
-            return null;
+            return [];
         }
 
         changed = setLastLeftNum(game) || changed;
@@ -94,16 +106,13 @@ function solveGame(game: Game): number[] | null {
                 const copy = copyGame(game);
                 copy.solution[block.cellIds[index]] = num;
                 copy.blocks[blockIndex].combs = copy.blocks[blockIndex].combs.filter((comb) => comb[index] === num);
-                const result = solveGame(copy);
-                if (result) {
-                    return result;
-                }
+                solutions.push(...solveGame(copy));
             }
-            return null;
+            return solutions;
         }
         changed = false;
     }
-    return game.solution;
+    return [game.solution];
 }
 
 function copyGame(source: Game): Game {
