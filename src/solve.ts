@@ -1,5 +1,6 @@
 import { genCombs } from './gen-combs';
 import type { NumBlockRule } from './types';
+import { validateRules } from './validate-rules';
 
 interface NumBlock {
     cellIds: number[];
@@ -22,15 +23,7 @@ interface Game {
 }
 
 export function solve(width: number, height: number, rules: NumBlockRule[]): number[][] {
-    const allCellIds = rules.flatMap((rule) => rule.cellIds);
-    allCellIds.forEach((cellId, index) => {
-        if (allCellIds.indexOf(cellId) !== index) {
-            throw new Error(`Duplicate cellId ${cellId}`);
-        }
-        if (cellId < 0 || cellId >= width * height) {
-            throw new Error(`Invalid cellId ${cellId}`);
-        }
-    });
+    validateRules(width, height, rules);
 
     const game: Game = {
         width,
