@@ -24,3 +24,33 @@ export function parseNumBlockRules(input: string): NumBlockRule[] {
             };
         });
 }
+
+type Rules {
+    width: number;
+    height: number;
+    blocks: NumBlockRule[];
+}
+
+export function parseRules(input: string): Rules {
+    const [ blockRules, field ] = input.split('\n\n');
+
+    const blocks = new Map<string, NumBlockRule>();
+    blockRules.split('\n').forEach((line, index) => {
+        const res = (/^([0-9A-Za-z])([+\-*/=])([0-9]+)$/g).exec(line);
+        if (!res) {
+            throw new Error(`Invalid rule on line ${index}`);
+        }
+        blocks.set(res[1].toLowerCase(), {
+            cellIds: [],
+            op: <Operator>res[2],
+            result: parseInt(res[3], 10),
+        });
+    });
+
+    const rows = field.split('\n');
+    const height = rows.length;
+    const width = rows[0].length;
+    if (rows.some((row) => row.length !== width)) {
+        throw new Error('Field rows have different lengths');
+    }
+}
