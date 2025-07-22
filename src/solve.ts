@@ -22,14 +22,14 @@ interface Game {
     vertIndicesCombs: Map<number, number[][]>; // size -> combs
 }
 
-export function solve(width: number, height: number, rules: NumBlockRule[]): number[][] {
-    validateRules(width, height, rules);
+export function solve(width: number, height: number, blockRules: NumBlockRule[]): number[][] {
+    validateRules(width, height, blockRules);
 
     const game: Game = {
         width,
         height,
         solution: new Array<number>(width * height).fill(0),
-        blocks: rules.map((rule) => ({
+        blocks: blockRules.map((rule) => ({
             cellIds: rule.cellIds,
             combs: genCombs(Math.max(width, height), rule),
         })),
