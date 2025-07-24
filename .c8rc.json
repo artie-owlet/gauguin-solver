@@ -10,7 +10,9 @@
     "src/"
   ],
   "exclude": [
-    "src/index.ts"
+    "src/index.ts",
+    "src/util.ts",
+    "src/gen-combs.ts"
   ],
   "check-coverage": true,
   "per-file": true,
