@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@artie-owlet/gauguin-solver@workspace:.":
+"@artie-owlet/mathdoku-solver@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@artie-owlet/gauguin-solver@workspace:."
+  resolution: "@artie-owlet/mathdoku-solver@workspace:."
   dependencies:
     "@artie-owlet/chifir": "npm:^2.0.0"
     "@commitlint/cli": "npm:^19.8.0"
